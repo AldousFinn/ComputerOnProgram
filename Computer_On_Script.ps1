@@ -37,13 +37,19 @@ Function Update-Script {
         # Save the latest script to a temporary file
         $latestScript.Content | Set-Content -Path $tempScriptPath -Force
 
+        # Check if the original script exists and delete it
+        if (Test-Path -Path $scriptPath) {
+            Write-Output "Removing old script file: $scriptPath"
+            Remove-Item -Path $scriptPath -Force
+        }
+
         # Rename the temporary script file to have a .ps1 extension
         $updatedScriptPath = $scriptPath
         Rename-Item -Path $tempScriptPath -NewName $updatedScriptPath
 
         # Restart the script with the new version
         Write-Output "Temporary updated script saved. Restarting for update..."
-        
+
         # Start a new PowerShell process with the updated script
         Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$updatedScriptPath`"" -NoNewWindow
 
