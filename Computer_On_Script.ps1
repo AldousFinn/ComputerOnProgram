@@ -9,25 +9,30 @@ $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/m
 Function Check-ForUpdates {
     try {
         Write-Output "Checking for updates..."
-        
+
         # Download the latest script from GitHub
         $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
-        
+        $latestScriptContent = $latestScript.Content
+
         # Read the current script's content
-        $currentScript = Get-Content -Path $scriptPath -Raw
+        $currentScriptContent = Get-Content -Path $scriptPath -Raw
 
         # Compare scripts; if different, update
-        if ($latestScript.Content -ne $currentScript) {
+        if ($latestScriptContent -ne $currentScriptContent) {
             Write-Output "Update found. Preparing to update the script..."
-            
+
             # Save the new script to a temporary file
-            $latestScript.Content | Set-Content -Path $tempScriptPath -Force
-            Write-Output "Temporary updated script saved. Restarting for update..."
+            $latestScriptContent | Set-Content -Path $tempScriptPath -Force
+
+            # Wait for a moment to ensure the file is written properly
+            Start-Sleep -Seconds 1
 
             # Move the new script over the old one
             Move-Item -Force "$tempScriptPath" "$scriptPath"
 
-            # Exit the current process immediately after updating
+            Write-Output "Temporary updated script saved. Restarting for update..."
+
+            # Exit the current process to restart
             Write-Output "Exiting current session after restarting the script..."
             Exit
         } else {
@@ -60,7 +65,6 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
-        # Huxley wuz here! again! 730
         Start-Sleep -Seconds 870
     }
 }
@@ -69,4 +73,5 @@ Function Main {
 Check-ForUpdates
 
 # After update, restart the script in a new PowerShell process
-Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow -PassThru
+Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow
+Exit
