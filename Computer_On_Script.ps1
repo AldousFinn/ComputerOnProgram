@@ -2,6 +2,7 @@
 $outputFilePath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
 $folderPath = Split-Path $outputFilePath
 $scriptPath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
+$tempScriptPath = "$scriptPath.temp"
 $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/main/Computer_On_Script.ps1"
 
 # Function: Check for updates from GitHub
@@ -15,12 +16,14 @@ Function Check-ForUpdates {
 
         # Compare scripts; if different, update
         if ($latestScript.Content -ne $currentScript) {
-            Write-Output "Update found. Updating the script..."
-            $latestScript.Content | Set-Content -Path $scriptPath -Force
-            Write-Output "Script updated successfully. Restarting..."
+            Write-Output "Update found. Preparing to update the script..."
             
-            # Restart the script after updating
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow
+            # Save the new script to a temporary file
+            $latestScript.Content | Set-Content -Path $tempScriptPath -Force
+            Write-Output "Temporary updated script saved. Restarting for update..."
+
+            # Relaunch PowerShell to apply the update
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -Command `"Move-Item -Force '$tempScriptPath' '$scriptPath'; Start-Process -FilePath 'powershell.exe' -ArgumentList '-ExecutionPolicy Bypass -File `$scriptPath`' -NoNewWindow`"" -NoNewWindow
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
@@ -59,4 +62,3 @@ Function Main {
 # Run update check and then the main function
 Check-ForUpdates
 Main
-
