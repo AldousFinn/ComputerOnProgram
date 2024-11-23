@@ -57,6 +57,7 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
+        # Huxley was here.
         Start-Sleep -Seconds 870
     }
 }
