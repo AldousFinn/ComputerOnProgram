@@ -23,7 +23,8 @@ Function Check-ForUpdates {
             Write-Output "Temporary updated script saved. Restarting for update..."
 
             # Relaunch PowerShell to apply the update
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -Command `"Move-Item -Force '$tempScriptPath' '$scriptPath'; Start-Process -FilePath 'powershell.exe' -ArgumentList '-ExecutionPolicy Bypass -File `$scriptPath`' -NoNewWindow`"" -NoNewWindow
+            $moveCommand = "Move-Item -Force `"$tempScriptPath`" `"$scriptPath`"; Start-Process -FilePath `"powershell.exe`" -ArgumentList `"-ExecutionPolicy Bypass -File `"$scriptPath`"` -NoNewWindow"
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -Command `$moveCommand" -NoNewWindow
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
