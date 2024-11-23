@@ -28,10 +28,11 @@ Function Check-ForUpdates {
             # Start the updated script in a new PowerShell session
             $newProcess = Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -PassThru -NoNewWindow
 
-            # Wait for the new process to start
-            Start-Sleep -Seconds 2
+            # Wait for the new process to be fully started (add sleep for reliability)
+            Start-Sleep -Seconds 3
 
             # Exit the current session after restarting
+            Write-Output "Exiting current session after restarting the script..."
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
@@ -63,7 +64,6 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
-        # Huxley wuz here
         Start-Sleep -Seconds 870
     }
 }
