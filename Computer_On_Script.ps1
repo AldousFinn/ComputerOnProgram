@@ -37,11 +37,15 @@ Function Update-Script {
         # Save the latest script to a temporary file
         $latestScript.Content | Set-Content -Path $tempScriptPath -Force
 
+        # Rename the temporary script file to have a .ps1 extension
+        $updatedScriptPath = $scriptPath
+        Rename-Item -Path $tempScriptPath -NewName $updatedScriptPath
+
         # Restart the script with the new version
         Write-Output "Temporary updated script saved. Restarting for update..."
         
         # Start a new PowerShell process with the updated script
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$tempScriptPath`"" -NoNewWindow
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$updatedScriptPath`"" -NoNewWindow
 
         # Exit the current session
         Exit
@@ -72,7 +76,6 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating
-        # Huxley was here.
         Start-Sleep -Seconds 870
     }
 }
