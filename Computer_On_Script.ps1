@@ -22,9 +22,16 @@ Function Check-ForUpdates {
             $latestScript.Content | Set-Content -Path $tempScriptPath -Force
             Write-Output "Temporary updated script saved. Restarting for update..."
 
-            # Relaunch PowerShell to apply the update
-            $moveCommand = "Move-Item -Force `"$tempScriptPath`" `"$scriptPath`"; Start-Process -FilePath `"powershell.exe`" -ArgumentList `"-ExecutionPolicy Bypass -File `"$scriptPath`"` -NoNewWindow"
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -Command `$moveCommand" -NoNewWindow
+            # Move the new script over the old one
+            Move-Item -Force "$tempScriptPath" "$scriptPath"
+
+            # Start the updated script in a new PowerShell session
+            $newProcess = Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -PassThru -NoNewWindow
+
+            # Wait for the new process to start
+            Start-Sleep -Seconds 2
+
+            # Exit the current session after restarting
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
@@ -56,7 +63,6 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
-        # Huxley wuz here
         Start-Sleep -Seconds 870
     }
 }
