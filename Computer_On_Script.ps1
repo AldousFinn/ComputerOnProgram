@@ -12,10 +12,10 @@ Function Check-ForUpdates {
 
         # Download the latest script from GitHub
         $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
-        $latestScriptContent = $latestScript.Content
+        $latestScriptContent = $latestScript.Content.Trim()
 
-        # Read the current script's content
-        $currentScriptContent = Get-Content -Path $scriptPath -Raw
+        # Read the current script's content and normalize
+        $currentScriptContent = (Get-Content -Path $scriptPath -Raw).Trim()
 
         # Compare scripts; if different, update
         if ($latestScriptContent -ne $currentScriptContent) {
