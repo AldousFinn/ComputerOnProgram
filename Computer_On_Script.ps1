@@ -8,6 +8,8 @@ $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/m
 # Function: Check for updates from GitHub
 Function Check-ForUpdates {
     try {
+        Write-Output "Checking for updates..."
+        
         # Download the latest script from GitHub
         $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
         
@@ -29,6 +31,7 @@ Function Check-ForUpdates {
             $newProcess = Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -PassThru -NoNewWindow
 
             # Ensure the new process is started (add sleep for reliability)
+            Write-Output "New PowerShell process started. Waiting to exit current process..."
             Start-Sleep -Seconds 3
 
             # Exit the current session after restarting
@@ -64,7 +67,7 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
-        #Huxley wuz here again! hahahahaha
+        #Huxley Wuz here
         Start-Sleep -Seconds 870
     }
 }
