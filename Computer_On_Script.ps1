@@ -15,7 +15,9 @@ Function Write-Log {
 # Function: Normalize content for comparison
 Function Get-NormalizedContent {
     param([string]$Content)
-    return $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
+    $normalized = $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
+    Write-Log "Normalized content: $normalized"
+    return $normalized
 }
 
 # Function: Send and verify key press
@@ -34,9 +36,12 @@ Function Test-KeyPress {
 # Function: Check for updates from GitHub
 Function Check-ForUpdates {
     try {
+        Write-Log "Checking for updates..."
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $latestScript = (Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop).Content
         $currentScript = Get-Content -Path $scriptPath -Raw
+        
+        Write-Log "Fetched latest script and current script for comparison."
         
         $normalizedLatest = Get-NormalizedContent -Content $latestScript
         $normalizedCurrent = Get-NormalizedContent -Content $currentScript
@@ -44,9 +49,11 @@ Function Check-ForUpdates {
         if ($normalizedLatest -ne $normalizedCurrent) {
             Write-Log "Update found - installing..."
             Update-Script -NewContent $latestScript
+        } else {
+            Write-Log "No updates found"
         }
     } catch {
-        Write-Log "Update check failed"
+        Write-Log "Update check failed: $($_.Exception.Message)"
     }
 }
 
@@ -54,6 +61,7 @@ Function Check-ForUpdates {
 Function Update-Script {
     param([string]$NewContent)
     try {
+        Write-Log "Creating backup and updating script."
         $tempScriptPath = "$scriptPath.tmp"
         $backupScriptPath = "$scriptPath.backup"
         
@@ -62,14 +70,15 @@ Function Update-Script {
         
         if ((Test-Path -Path $tempScriptPath) -and (Get-Content -Path $tempScriptPath)) {
             Move-Item -Path $tempScriptPath -Destination $scriptPath -Force
-            Write-Log "Update successful - restarting..."
+            Write-Log "Update successful - restarting script."
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -WindowStyle Hidden
             Start-Sleep -Seconds 2
             Exit
         }
     } catch {
-        Write-Log "Update failed - restoring backup"
+        Write-Log "Update failed: $($_.Exception.Message)"
         if (Test-Path -Path $backupScriptPath) {
+            Write-Log "Restoring backup..."
             Move-Item -Path $backupScriptPath -Destination $scriptPath -Force
         }
     }
@@ -87,9 +96,11 @@ Function Main {
         Write-Log "Script started"
         
         while ($True) {
+            Write-Log "Running key press test (iteration $counter)"
             Test-KeyPress -wshell $wshell
             
             if ($counter % 10 -eq 0) {
+                Write-Log "Checking for updates (counter: $counter)"
                 Check-ForUpdates
             }
             $counter++
@@ -97,7 +108,7 @@ Function Main {
             Start-Sleep -Seconds 870
         }
     } catch {
-        Write-Log "Error occurred - restarting in 30s"
+        Write-Log "Error in Main loop: $($_.Exception.Message)"
         Start-Sleep -Seconds 30
         Main
     }
