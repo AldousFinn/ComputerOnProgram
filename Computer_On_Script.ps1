@@ -13,6 +13,12 @@ Function Write-Log {
     Add-Content -Path $outputFilePath -Value $logMessage
 }
 
+# Function: Normalize content for comparison
+Function Get-NormalizedContent {
+    param([string]$Content)
+    return $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
+}
+
 # Function: Check for updates from GitHub
 Function Check-ForUpdates {
     try {
@@ -22,14 +28,29 @@ Function Check-ForUpdates {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $latestScript = (Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop).Content
         
-        # Read the current script's content and normalize line endings
-        $currentScript = (Get-Content -Path $scriptPath -Raw).Replace("`r`n", "`n")
-        $latestScript = $latestScript.Replace("`r`n", "`n")
+        # Read the current script's content
+        $currentScript = Get-Content -Path $scriptPath -Raw
         
-        # Compare scripts; if different, update
-        if ($latestScript -ne $currentScript) {
-            Write-Log "Update found! Initiating update process..."
-            Update-Script -NewContent $latestScript
+        # Normalize both contents for comparison
+        $normalizedLatest = Get-NormalizedContent -Content $latestScript
+        $normalizedCurrent = Get-NormalizedContent -Content $currentScript
+        
+        # Calculate hashes for comparison
+        $latestHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalizedLatest))
+        $currentHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalizedCurrent))
+        
+        # Compare hashes
+        $needsUpdate = -not ([Convert]::ToBase64String($latestHash) -eq [Convert]::ToBase64String($currentHash))
+        
+        if ($needsUpdate) {
+            # Double check if update is really needed by comparing lengths and first different character
+            if (($normalizedLatest.Length -ne $normalizedCurrent.Length) -or 
+                ($normalizedLatest -ne $normalizedCurrent)) {
+                Write-Log "Update found! Initiating update process..."
+                Update-Script -NewContent $latestScript
+            } else {
+                Write-Log "False positive detected. No update needed."
+            }
         } else {
             Write-Log "No updates found. Running the current version."
         }
@@ -51,7 +72,7 @@ Function Update-Script {
         Write-Log "Created backup at: $backupScriptPath"
         
         # Save the new script content
-        $NewContent | Set-Content -Path $tempScriptPath -Force
+        $NewContent | Out-File -FilePath $tempScriptPath -Encoding UTF8 -Force
         Write-Log "Saved new script content to temporary file"
         
         # Verify the temporary file exists and has content
@@ -59,15 +80,30 @@ Function Update-Script {
             throw "Temporary script file is missing or empty"
         }
         
+        # Verify content was written correctly
+        $tempContent = Get-NormalizedContent -Content (Get-Content -Path $tempScriptPath -Raw)
+        $expectedContent = Get-NormalizedContent -Content $NewContent
+        
+        if ($tempContent -ne $expectedContent) {
+            throw "Content verification failed"
+        }
+        
         # Replace the original script
         Move-Item -Path $tempScriptPath -Destination $scriptPath -Force
         Write-Log "Successfully updated script file"
         
+        # Verify the update one final time
+        $finalContent = Get-NormalizedContent -Content (Get-Content -Path $scriptPath -Raw)
+        if ($finalContent -ne $expectedContent) {
+            throw "Final content verification failed"
+        }
+        
         # Start a new PowerShell process with the updated script
         Write-Log "Restarting script with updated version..."
-        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -WindowStyle Hidden
         
-        # Exit the current session
+        # Exit the current session after a short delay
+        Start-Sleep -Seconds 2
         Exit
     } catch {
         Write-Log "Failed to update script: $($_.Exception.Message)"
@@ -125,4 +161,4 @@ if (!(Test-Path -Path $outputFilePath)) {
 Write-Log "Script started"
 Check-ForUpdates
 Main
-#Huxley was here.
+#huxley was here
