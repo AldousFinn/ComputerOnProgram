@@ -8,35 +8,45 @@ $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/m
 Function Check-ForUpdates {
     try {
         Write-Output "Checking for updates..."
-        
-        # Fetch remote script content
-        $remoteScriptContent = (Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop).Content
-        
-        # Read local script content
-        $localScriptContent = Get-Content -Path $scriptPath -Raw -ErrorAction Stop
 
-        # Normalize content for comparison
-        $normalizedRemote = ($remoteScriptContent.Trim() -replace '\s+', '')
-        $normalizedLocal = ($localScriptContent.Trim() -replace '\s+', '')
+        # Download the latest script from GitHub
+        $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
 
-        if ($normalizedRemote -ne $normalizedLocal) {
+        # Read the current script's content
+        $currentScript = Get-Content -Path $scriptPath -Raw
+
+        # Compare scripts; if different, update
+        if ($latestScript.Content -ne $currentScript) {
             Write-Output "Update required!"
-            
-            # Save the new script content
-            $tempScriptPath = "$scriptPath.tmp"
-            $remoteScriptContent | Set-Content -Path $tempScriptPath -Force
-            Write-Output "Temporary updated script saved. Restarting for update..."
-            
-            # Restart the script using the updated version
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$tempScriptPath`"" -NoNewWindow
-            Write-Output "New PowerShell process started. Waiting to exit current process..."
-            Start-Sleep -Seconds 2
-            Exit
+            Update-Script
         } else {
             Write-Output "No updates found. Running the current version."
         }
     } catch {
         Write-Output "Failed to check for updates: $_"
+    }
+}
+
+# Function to download the latest script and restart
+Function Update-Script {
+    try {
+        # Download the latest script from GitHub
+        $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
+        $tempScriptPath = $scriptPath + ".tmp"
+
+        # Save the latest script to a temporary file
+        $latestScript.Content | Set-Content -Path $tempScriptPath -Force
+
+        # Restart the script with the new version
+        Write-Output "Temporary updated script saved. Restarting for update..."
+        
+        # Start a new PowerShell process with the updated script
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$tempScriptPath`"" -NoNewWindow
+
+        # Exit the current session
+        Exit
+    } catch {
+        Write-Output "Failed to download or restart script: $_"
     }
 }
 
@@ -61,7 +71,7 @@ Function Main {
         # Append the log entry to the file
         Add-Content -Path $outputFilePath -Value $logEntry
 
-        # Wait for 870 seconds before repeating the code.
+        # Wait for 870 seconds before repeating
         # Huxley was here.
         Start-Sleep -Seconds 870
     }
