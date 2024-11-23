@@ -2,42 +2,33 @@
 $outputFilePath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
 $folderPath = Split-Path $outputFilePath
 $scriptPath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
-$tempScriptPath = "$scriptPath.temp"
 $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/main/Computer_On_Script.ps1"
 
 # Function: Check for updates from GitHub
 Function Check-ForUpdates {
     try {
         Write-Output "Checking for updates..."
-
         # Download the latest script from GitHub
         $latestScript = Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop
-        $latestScriptContent = $latestScript.Content.Trim()
-
-        # Read the current script's content and normalize
-        $currentScriptContent = (Get-Content -Path $scriptPath -Raw).Trim()
+        
+        # Read the current script's content
+        $currentScript = Get-Content -Path $scriptPath -Raw
 
         # Compare scripts; if different, update
-        if ($latestScriptContent -ne $currentScriptContent) {
+        if ($latestScript.Content -ne $currentScript) {
             Write-Output "Update found. Preparing to update the script..."
-
-            # Save the new script to a temporary file
-            $latestScriptContent | Set-Content -Path $tempScriptPath -Force
-
-            # Wait for a moment to ensure the file is written properly
-            Start-Sleep -Seconds 1
-
-            # Move the new script over the old one
-            Move-Item -Force "$tempScriptPath" "$scriptPath"
-
+            # Save the updated script
+            $latestScript.Content | Set-Content -Path $scriptPath -Force
             Write-Output "Temporary updated script saved. Restarting for update..."
-
-            # Exit the current process to restart
-            Write-Output "Exiting current session after restarting the script..."
+            
+            # Restart the updated script
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow
+            Write-Output "New PowerShell process started. Waiting to exit current process..."
+            
+            # Exit the current session
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
-            Exit  # Exit if no update is found
         }
     } catch {
         Write-Output "Failed to check for updates: $_"
@@ -72,7 +63,4 @@ Function Main {
 
 # Run update check and then the main function
 Check-ForUpdates
-
-# After update, restart the script in a new PowerShell process
-Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow
-Exit
+Main
