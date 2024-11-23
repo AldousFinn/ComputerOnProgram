@@ -13,6 +13,12 @@ Function Write-Log {
     Add-Content -Path $outputFilePath -Value $logMessage
 }
 
+# Function: Normalize content for comparison
+Function Get-NormalizedContent {
+    param([string]$Content)
+    return $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
+}
+
 # Function: Verify key press was sent
 Function Test-KeyPress {
     param (
@@ -59,14 +65,6 @@ Function Test-KeyPress {
 
         if ($keypressVerified) {
             Write-Log "Key press F15 verified - System idle time was reset"
-            # Also check if the screen is actually on
-            $powerStatus = (Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorPowerStatus | 
-                          Select-Object -First 1).PowerState
-            if ($powerStatus -eq 0) {
-                Write-Log "Display is active - System is being kept awake"
-            } else {
-                Write-Log "Warning: Display may be in power saving mode despite key press"
-            }
             return $true
         } else {
             Write-Log "Warning: Key press F15 was sent but could not be verified"
@@ -75,6 +73,101 @@ Function Test-KeyPress {
     } catch {
         Write-Log "Error verifying key press: $($_.Exception.Message)"
         return $false
+    }
+}
+
+# Function: Check for updates from GitHub
+Function Check-ForUpdates {
+    try {
+        Write-Log "Checking for updates..."
+        
+        # Download the latest script from GitHub with TLS 1.2
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $latestScript = (Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop).Content
+        
+        # Read the current script's content
+        $currentScript = Get-Content -Path $scriptPath -Raw
+        
+        # Normalize both contents for comparison
+        $normalizedLatest = Get-NormalizedContent -Content $latestScript
+        $normalizedCurrent = Get-NormalizedContent -Content $currentScript
+        
+        # Calculate hashes for comparison
+        $latestHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalizedLatest))
+        $currentHash = [System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalizedCurrent))
+        
+        # Compare hashes
+        $needsUpdate = -not ([Convert]::ToBase64String($latestHash) -eq [Convert]::ToBase64String($currentHash))
+        
+        if ($needsUpdate) {
+            # Double check if update is really needed by comparing lengths and first different character
+            if (($normalizedLatest.Length -ne $normalizedCurrent.Length) -or 
+                ($normalizedLatest -ne $normalizedCurrent)) {
+                Write-Log "Update found! Initiating update process..."
+                Update-Script -NewContent $latestScript
+            } else {
+                Write-Log "False positive detected. No update needed."
+            }
+        } else {
+            Write-Log "No updates found. Running the current version."
+        }
+    } catch {
+        Write-Log "Failed to check for updates: $($_.Exception.Message)"
+    }
+}
+
+# Function to download the latest script and restart
+Function Update-Script {
+    param([string]$NewContent)
+    
+    try {
+        $tempScriptPath = "$scriptPath.tmp"
+        $backupScriptPath = "$scriptPath.backup"
+        
+        # Create backup of current script
+        Copy-Item -Path $scriptPath -Destination $backupScriptPath -Force
+        Write-Log "Created backup at: $backupScriptPath"
+        
+        # Save the new script content
+        $NewContent | Out-File -FilePath $tempScriptPath -Encoding UTF8 -Force
+        Write-Log "Saved new script content to temporary file"
+        
+        # Verify the temporary file exists and has content
+        if (!(Test-Path -Path $tempScriptPath) -or !(Get-Content -Path $tempScriptPath)) {
+            throw "Temporary script file is missing or empty"
+        }
+        
+        # Verify content was written correctly
+        $tempContent = Get-NormalizedContent -Content (Get-Content -Path $tempScriptPath -Raw)
+        $expectedContent = Get-NormalizedContent -Content $NewContent
+        
+        if ($tempContent -ne $expectedContent) {
+            throw "Content verification failed"
+        }
+        
+        # Replace the original script
+        Move-Item -Path $tempScriptPath -Destination $scriptPath -Force
+        Write-Log "Successfully updated script file"
+        
+        # Verify the update one final time
+        $finalContent = Get-NormalizedContent -Content (Get-Content -Path $scriptPath -Raw)
+        if ($finalContent -ne $expectedContent) {
+            throw "Final content verification failed"
+        }
+        
+        # Start a new PowerShell process with the updated script
+        Write-Log "Restarting script with updated version..."
+        Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -WindowStyle Hidden
+        
+        # Exit the current session after a short delay
+        Start-Sleep -Seconds 2
+        Exit
+    } catch {
+        Write-Log "Failed to update script: $($_.Exception.Message)"
+        if (Test-Path -Path $backupScriptPath) {
+            Write-Log "Restoring from backup..."
+            Move-Item -Path $backupScriptPath -Destination $scriptPath -Force
+        }
     }
 }
 
@@ -90,6 +183,7 @@ Function Main {
         Write-Log "Starting main loop..."
         $wshell = New-Object -ComObject wscript.shell
         $failedAttempts = 0
+        $counter = 0
         
         while ($True) {
             # Send and verify the key press
@@ -122,11 +216,6 @@ Function Main {
         Main
     }
 }
-
-# [Rest of your original script remains the same - Update functions, etc.]
-
-# Initialize counter
-$counter = 0
 
 # Create log file if it doesn't exist
 if (!(Test-Path -Path $outputFilePath)) {
