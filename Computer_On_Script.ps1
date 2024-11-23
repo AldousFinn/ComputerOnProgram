@@ -2,7 +2,7 @@
 $outputFilePath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
 $folderPath = Split-Path $outputFilePath
 $scriptPath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
-$githubRawUrl = "https://raw.githubusercontent.com/username/repository/main/Computer_On_Script.ps1"
+$githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/main/Computer_On_Script.ps1"
 
 # Function: Check for updates from GitHub
 Function Check-ForUpdates {
