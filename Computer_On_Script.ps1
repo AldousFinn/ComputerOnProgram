@@ -15,12 +15,8 @@ Function Write-Log {
 # Function: Normalize content for comparison
 Function Get-NormalizedContent {
     param([string]$Content)
-    $normalized = $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
-    $preview = $normalized.Substring(0, [Math]::Min($normalized.Length, 1)) + "..." # Show only the first 50 characters
-    Write-Log "Normalized content preview: $preview"
-    return $normalized
+    return $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
 }
-
 
 # Function: Send and verify key press
 Function Test-KeyPress {
@@ -123,4 +119,3 @@ if (!(Test-Path -Path $outputFilePath)) {
 
 # Start the script
 Main
-#Huxley was here.
