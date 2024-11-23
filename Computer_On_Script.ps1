@@ -37,6 +37,7 @@ Function Check-ForUpdates {
             Exit
         } else {
             Write-Output "No updates found. Running the current version."
+            Exit  # Exit if no update is found
         }
     } catch {
         Write-Output "Failed to check for updates: $_"
