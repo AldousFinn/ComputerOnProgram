@@ -51,7 +51,7 @@ Function Main {
         # Append the log entry to the file
         Add-Content -Path $outputFilePath -Value $logEntry
 
-        # Wait for 870 seconds before repeating
+        # Wait for 870 seconds before repeating the code.
         Start-Sleep -Seconds 870
     }
 }
