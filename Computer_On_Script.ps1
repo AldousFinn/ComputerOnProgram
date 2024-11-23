@@ -28,13 +28,9 @@ Function Check-ForUpdates {
             Move-Item -Force "$tempScriptPath" "$scriptPath"
 
             # Start the updated script in a new PowerShell session
-            $newProcess = Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -PassThru -NoNewWindow
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -NoNewWindow -PassThru
 
-            # Ensure the new process is started (add sleep for reliability)
-            Write-Output "New PowerShell process started. Waiting to exit current process..."
-            Start-Sleep -Seconds 3
-
-            # Exit the current session after restarting
+            # Exit the current session immediately after restarting the script
             Write-Output "Exiting current session after restarting the script..."
             Exit
         } else {
@@ -67,7 +63,7 @@ Function Main {
         Add-Content -Path $outputFilePath -Value $logEntry
 
         # Wait for 870 seconds before repeating the code.
-        #Huxley Wuz here
+        # Huxley wuz here again! 69
         Start-Sleep -Seconds 870
     }
 }
