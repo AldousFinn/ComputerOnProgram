@@ -161,5 +161,3 @@ if (!(Test-Path -Path $outputFilePath)) {
 Write-Log "Script started"
 Check-ForUpdates
 Main
-#huxley was here
-#your mom is fat
