@@ -15,7 +15,7 @@ Function Write-Log {
 # Function: Normalize content for comparison
 Function Get-NormalizedContent {
     param([string]$Content)
-    return $Content.Trim().Replace("`r`n", "`n").Replace("`r", "`n")
+    return $Content.Trim() -replace "\r\n", "`n" -replace "\r", "`n"
 }
 
 # Function: Send and verify key press
@@ -37,7 +37,7 @@ Function Check-ForUpdates {
         Write-Log "Checking for updates..."
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $latestScript = (Invoke-WebRequest -Uri $githubRawUrl -UseBasicParsing -ErrorAction Stop).Content
-        $currentScript = Get-Content -Path $scriptPath -Raw
+        $currentScript = Get-Content -Path $scriptPath -Raw -Encoding UTF8
         
         Write-Log "Fetched latest script and current script for comparison."
         
@@ -51,7 +51,7 @@ Function Check-ForUpdates {
             Write-Log "No updates found"
         }
     } catch {
-        Write-Log "Update check failed: $($_.Exception.Message)"
+        Write-Log "Update check failed: $($_.Exception.Message)`nDetails: $($_.Exception.StackTrace)"
     }
 }
 
@@ -120,4 +120,3 @@ if (!(Test-Path -Path $outputFilePath)) {
 # Start the script
 Main
 #Huxley was here.
-#Brudda why don't you see me?
