@@ -7,8 +7,10 @@ $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/m
 # Function: Write log with timestamp
 Function Write-Log {
     param([string]$Message)
-    $timestamp = (Get-Date).ToString("HH:mm:ss")
+    # Include date and time in the format "dd-MM-yyyy HH:mm:ss"
+    $timestamp = (Get-Date).ToString("dd-MM-yyyy HH:mm:ss")
     $logMessage = "[$timestamp] $Message"
+    # Append the log message to the specified log file
     Add-Content -Path $outputFilePath -Value $logMessage
 }
 
@@ -16,6 +18,27 @@ Function Write-Log {
 Function Get-NormalizedContent {
     param([string]$Content)
     return $Content.Trim() -replace "\r\n", "`n" -replace "\r", "`n"
+}
+
+# Function: Delete logs older than 4 hours
+Function Cleanup-Logs {
+    try {
+        if (Test-Path -Path $outputFilePath) {
+            $fileAgeThreshold = (Get-Date).AddHours(-4)
+            $fileInfo = Get-Item -Path $outputFilePath
+            if ($fileInfo.LastWriteTime -lt $fileAgeThreshold) {
+                Write-Log "Log file is older than 4 hours. Deleting..."
+                Remove-Item -Path $outputFilePath -Force
+                Write-Log "Log file deleted successfully."
+            } else {
+                Write-Log "Log file is within the 4-hour threshold. No action taken."
+            }
+        } else {
+            Write-Log "Log file not found. Skipping cleanup."
+        }
+    } catch {
+        Write-Log "Error during log cleanup: $($_.Exception.Message)"
+    }
 }
 
 # Function: Send and verify key press
@@ -101,6 +124,12 @@ Function Main {
                 Write-Log "Checking for updates (counter: $counter)"
                 Check-ForUpdates
             }
+            
+            if ($counter % 5 -eq 0) {
+                Write-Log "Running log cleanup (counter: $counter)"
+                Cleanup-Logs
+            }
+            
             $counter++
             
             Start-Sleep -Seconds 870
@@ -123,5 +152,3 @@ Start-Sleep -Seconds 60
 
 # Start the script
 Main
-#Huxley was here.
-#Hi
