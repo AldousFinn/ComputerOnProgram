@@ -45,7 +45,7 @@ Function Cleanup-Logs {
 Function Test-KeyPress {
     param ($wshell)
     try {
-        $wshell.SendKeys("{F23}")
+        $wshell.SendKeys("{F15}")
         Write-Log "Key press sent"
         return $true
     } catch {
