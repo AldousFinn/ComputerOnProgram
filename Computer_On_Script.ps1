@@ -117,8 +117,9 @@ if (!(Test-Path -Path $outputFilePath)) {
     New-Item -ItemType File -Path $outputFilePath -Force | Out-Null
 }
 
+# Add a delay at startup
+Write-Log "Waiting 1 minute before starting the main script..."
+Start-Sleep -Seconds 60
+
 # Start the script
 Main
-#Huxley was here.
-#Can you see me brudda?
-#This is a test to see if you can see me.
