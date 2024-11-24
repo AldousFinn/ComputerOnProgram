@@ -1,7 +1,7 @@
-# Define paths
-$outputFilePath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
+# Define paths using environment variables
+$outputFilePath = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
 $folderPath = Split-Path $outputFilePath
-$scriptPath = "C:\Users\hrust\Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
+$scriptPath = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
 $githubRawUrl = "https://raw.githubusercontent.com/AldousFinn/ComputerOnScript/main/Computer_On_Script.ps1"
 
 # Function: Write log with timestamp
@@ -119,4 +119,3 @@ if (!(Test-Path -Path $outputFilePath)) {
 
 # Start the script
 Main
-#Huxley was here.
