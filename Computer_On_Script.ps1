@@ -20,18 +20,46 @@ Function Get-NormalizedContent {
     return $Content.Trim() -replace "\r\n", "`n" -replace "\r", "`n"
 }
 
-# Function: Delete logs older than 4 hours
+# Function: Delete log entries older than 4 hours
 Function Cleanup-Logs {
     try {
         if (Test-Path -Path $outputFilePath) {
-            $fileAgeThreshold = (Get-Date).AddHours(-4)
-            $fileInfo = Get-Item -Path $outputFilePath
-            if ($fileInfo.LastWriteTime -lt $fileAgeThreshold) {
-                Write-Log "Log file is older than 4 hours. Deleting..."
-                Remove-Item -Path $outputFilePath -Force
-                Write-Log "Log file deleted successfully."
+            $currentTime = Get-Date
+            $fourHoursAgo = $currentTime.AddHours(-4)
+            
+            # Read all existing log entries
+            $logEntries = Get-Content -Path $outputFilePath
+            
+            # Filter and keep only entries within the 4-hour window
+            $filteredEntries = $logEntries | Where-Object {
+                # Extract timestamp from the log entry
+                if ($_ -match '^\[(\d{2}-\d{2}-\d{4}) (\d{2}:\d{2}:\d{2})\]') {
+                    $entryDateString = $matches[1]
+                    $entryTimeString = $matches[2]
+                    
+                    # Parse the timestamp
+                    $entryDateTime = [DateTime]::ParseExact(
+                        "$entryDateString $entryTimeString", 
+                        "dd-MM-yyyy HH:mm:ss", 
+                        [System.Globalization.CultureInfo]::InvariantCulture
+                    )
+                    
+                    # Check if the entry is within the 4-hour window
+                    return $entryDateTime -ge $fourHoursAgo
+                }
+                
+                # If timestamp can't be parsed, keep the entry
+                return $true
+            }
+            
+            # Write filtered entries back to the file
+            if ($filteredEntries) {
+                $filteredEntries | Set-Content -Path $outputFilePath
+                Write-Log "Log cleanup completed. Removed entries older than 4 hours."
             } else {
-                Write-Log "Log file is within the 4-hour threshold. No action taken."
+                # If all entries are filtered out, create an empty file
+                Clear-Content -Path $outputFilePath
+                Write-Log "All log entries were older than 4 hours. File cleared."
             }
         } else {
             Write-Log "Log file not found. Skipping cleanup."
