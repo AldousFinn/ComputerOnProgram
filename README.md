@@ -2,8 +2,8 @@
 
 This program was initially designed to prevent computers at my workplace from entering sleep mode due to inactivity.
 
-When you run the `*.exe*` file, it automatically sets up the required directories and files on your computer to keep the screen awake indefinitely (until you shut down the computer). To activate the script located at:  
-**`C:\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script`**, you have two options:
+When you run the "*.exe*" file, it automatically sets up the required directories and files on your computer to keep the screen awake indefinitely (until you shut down the computer). To activate the script located at:  
+"**\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script**", you have two options:
 
 1. **Restart Your Computer:** The script will automatically start during boot.
 2. **Manually Activate the Script:**  
