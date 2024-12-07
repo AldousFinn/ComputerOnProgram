@@ -3,7 +3,7 @@
 This program was initially designed to prevent computers at my workplace from entering sleep mode due to inactivity.
 
 When you run the "*.exe*" file, it automatically sets up the required directories and files on your computer to keep the screen awake indefinitely (until you shut down the computer). To activate the script located at:  
-"**\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script**", you have two options:
+"**\Users\\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script**", you have two options:
 
 1. **Restart Your Computer:** The script will automatically start during boot.
 2. **Manually Activate the Script:**  
@@ -17,7 +17,7 @@ When you run the "*.exe*" file, it automatically sets up the required directorie
 The basic program performs the core functionality: it prevents the computer from sleeping by simulating repeated key presses of the **F15** function key. This continues indefinitely until the computer is shut down through normal means.
 
 Additionally, it logs the timestamp of each simulated keypress to a "*.txt*" file stored at:  
-"**\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Log_Files**".
+"**\Users\\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Log_Files**".
 
 ---
 
