@@ -1,16 +1,35 @@
-# Computer On Basic/Adv Program
-This was originally design to circumvent my employer's desire for the computers at work to fall asleep due to inactivity. 
+# Computer On: Basic/Advanced Program
 
-The "*.exe*" file when run will create all the necessary directories and files on your computer to keep the screen awake indefinitely (Until you turn the computer off). To start the script that should be installed at **"\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script"** you must either restart the computer or activate the script in the Windows startup folder. This can be accessed by pressing "*Win + R*" and typing "*shell:startup*". Then you must double-click the shortcut to begin the program.
+This program was initially designed to prevent computers at my workplace from entering sleep mode due to inactivity.
 
+When you run the `*.exe*` file, it automatically sets up the required directories and files on your computer to keep the screen awake indefinitely (until you shut down the computer). To activate the script located at:  
+**`C:\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Script`**, you have two options:
 
+1. **Restart Your Computer:** The script will automatically start during boot.
+2. **Manually Activate the Script:**  
+   - Press **`Win + R`**, type **`shell:startup`**, and press Enter.
+   - In the Windows Startup folder, double-click the shortcut to begin the program.
+
+---
 
 ## Basic Program
-The basic program does just as the above describes. It will keep the computer awake by pressing the "*F15*" function key until you turn the computer off via the normal methods. It will then output timestamps of when a keypress is sent to a "*.txt*" file located at **"\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Log_Files"**.
 
+The basic program performs the core functionality: it prevents the computer from sleeping by simulating repeated key presses of the **F15** function key. This continues indefinitely until the computer is shut down through normal means.
 
+Additionally, it logs the timestamp of each simulated keypress to a `*.txt*` file stored at:  
+**`C:\Users\<USERNAME>\Documents\Computer_On_Folder\Computer_On_Log_Files`**
+
+---
 
 ## Advanced Program
-The advanced program has all of the same functionality as the basic program but it will also check for updates from the "*.ps1*" file in this github repo. This does make the advanced program some sort of defacto virus. However it does allow you to push updates to the script however you see fit. If you would like to push your own updates instead of relying on me to do it, all you need to do is change the "**githubRawUrl**" on the *fifth* line of the script file you downloaded to the raw URL for the "*.ps1*" file you would like you the script file to replicate.   
 
+The advanced program includes all the features of the basic program, plus the ability to update itself from a `*.ps1*` file hosted on this GitHub repository.
 
+While this functionality could be considered akin to a virus due to its ability to self-update, it allows you to push updates to the script as needed.
+
+### Customizing the Update Source
+If you'd like to use your own updates instead of relying on the default, simply edit the script file you downloaded. Change the value of `githubRawUrl` on the **fifth line** to point to the raw URL of your desired `*.ps1*` file.
+
+---
+
+This program provides flexibility for both basic and advanced use cases, ensuring your computer remains awake while offering the option to customize and improve the script as needed.
