@@ -30,6 +30,4 @@ While this functionality could be considered akin to a virus due to its ability 
 ### Customizing the Update Source
 If you'd like to use your own updates instead of relying on the default, simply edit the script file you downloaded. Change the value of `githubRawUrl` on the **fifth line** to point to the raw URL of your desired `*.ps1*` file.
 
----
 
-This program provides flexibility for both basic and advanced use cases, ensuring your computer remains awake while offering the option to customize and improve the script as needed.
