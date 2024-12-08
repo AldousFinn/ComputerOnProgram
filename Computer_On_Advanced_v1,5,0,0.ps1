@@ -17,6 +17,55 @@ Function Get-NormalizedContent {
     return $Content.Trim() -replace "\r\n", "`n" -replace "\r", "`n"
 }
 
+# Function: Delete log entries older than 4 hours
+Function Cleanup-Logs {
+    try {
+        if (Test-Path -Path $outputFilePath) {
+            $currentTime = Get-Date
+            $fourHoursAgo = $currentTime.AddHours(-4)
+
+            # Read all existing log entries
+            $logEntries = Get-Content -Path $outputFilePath
+
+            # Filter and keep only entries within the 4-hour window
+            $filteredEntries = $logEntries | Where-Object {
+                # Extract timestamp from the log entry
+                if ($_ -match '^\[(\d{2}-\d{2}-\d{4}) (\d{2}:\d{2}:\d{2})\]') {
+                    $entryDateString = $matches[1]
+                    $entryTimeString = $matches[2]
+
+                    # Parse the timestamp
+                    $entryDateTime = [DateTime]::ParseExact(
+                        "$entryDateString $entryTimeString", 
+                        "dd-MM-yyyy HH:mm:ss", 
+                        [System.Globalization.CultureInfo]::InvariantCulture
+                    )
+
+                    # Check if the entry is within the 4-hour window
+                    return $entryDateTime -ge $fourHoursAgo
+                }
+
+                # If timestamp can't be parsed, keep the entry
+                return $true
+            }
+
+            # Write filtered entries back to the file
+            if ($filteredEntries) {
+                $filteredEntries | Set-Content -Path $outputFilePath
+                Write-Log "Log cleanup completed. Removed entries older than 4 hours."
+            } else {
+                # If all entries are filtered out, create an empty file
+                Clear-Content -Path $outputFilePath
+                Write-Log "All log entries were older than 4 hours. File cleared."
+            }
+        } else {
+            Write-Log "Log file not found. Skipping cleanup."
+        }
+    } catch {
+        Write-Log "Error during log cleanup: $($_.Exception.Message)"
+    }
+}
+
 # Function: Get the latest versioned file from GitHub
 Function Get-LatestVersionedFile {
     param([string]$RepoApiUrl, [string]$FilePrefix)
@@ -131,6 +180,10 @@ Function Main {
                 Write-Log "Checking for updates (counter: $counter)"
                 Check-ForUpdates
             }
+            if ($counter % 5 -eq 0) {
+                Write-Log "Running log cleanup (counter: $counter)"
+                Cleanup-Logs
+            }
             $counter++
             Start-Sleep -Seconds 870
         }
@@ -152,6 +205,3 @@ Start-Sleep -Seconds 60
 
 # Start the script
 Main
-
-
-#Huxley wuz here
