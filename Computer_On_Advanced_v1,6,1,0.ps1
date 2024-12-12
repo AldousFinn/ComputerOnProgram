@@ -142,16 +142,19 @@ Function Main {
         while ($True) {
             Write-Log "Simulating mouse movement (iteration $counter)"
             Simulate-MouseMovement -XOffset 1 -YOffset 0
-            if ($counter % 10 -eq 0) {
+
+            if ($counter % 6 -eq 0) {
                 Write-Log "Checking for updates (counter: $counter)"
                 Check-ForUpdates
             }
-            if ($counter % 5 -eq 0) {
+
+            if ($counter % 3 -eq 0) {
                 Write-Log "Running log cleanup (counter: $counter)"
                 Cleanup-Logs
             }
+
             $counter++
-            Start-Sleep -Seconds 870
+            Start-Sleep -Seconds 600
         }
     } catch {
         Write-Log "Error in Main loop: $($_.Exception.Message)"
