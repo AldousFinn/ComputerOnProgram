@@ -1,7 +1,20 @@
 # Define paths using environment variables
 $outputFilePath = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Log_Files\Computer_On_Log.txt"
-$folderPath = Split-Path $outputFilePath
-$scriptPath = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
+$folderPath     = Split-Path $outputFilePath
+$scriptPath     = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
+
+# Ensure VBScript launcher exists in Startup folder for silent launch
+$startupFolder     = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup"
+$vbsLauncherPath   = Join-Path $startupFolder "Launch_Computer_On_Script.vbs"
+$vbsScriptContent  = @"
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`"", 0, False
+"@
+
+# Create or update the VBS launcher if needed
+if (-not (Test-Path $vbsLauncherPath) -or (Get-Content $vbsLauncherPath -Raw) -ne $vbsScriptContent) {
+    $vbsScriptContent | Out-File -FilePath $vbsLauncherPath -Encoding ASCII -Force
+}
 
 # Function: Write log with timestamp
 Function Write-Log {
@@ -29,32 +42,23 @@ Function Cleanup-Logs {
 
             # Filter and keep only entries within the 4-hour window
             $filteredEntries = $logEntries | Where-Object {
-                # Extract timestamp from the log entry
                 if ($_ -match '^\[(\d{2}-\d{2}-\d{4}) (\d{2}:\d{2}:\d{2})\]') {
                     $entryDateString = $matches[1]
                     $entryTimeString = $matches[2]
-
-                    # Parse the timestamp
                     $entryDateTime = [DateTime]::ParseExact(
-                        "$entryDateString $entryTimeString", 
-                        "dd-MM-yyyy HH:mm:ss", 
+                        "$entryDateString $entryTimeString",
+                        "dd-MM-yyyy HH:mm:ss",
                         [System.Globalization.CultureInfo]::InvariantCulture
                     )
-
-                    # Check if the entry is within the 4-hour window
                     return $entryDateTime -ge $fourHoursAgo
                 }
-
-                # If timestamp can't be parsed, keep the entry
                 return $true
             }
 
-            # Write filtered entries back to the file
             if ($filteredEntries) {
                 $filteredEntries | Set-Content -Path $outputFilePath
                 Write-Log "Log cleanup completed. Removed entries older than 4 hours."
             } else {
-                # If all entries are filtered out, create an empty file
                 Clear-Content -Path $outputFilePath
                 Write-Log "All log entries were older than 4 hours. File cleared."
             }
