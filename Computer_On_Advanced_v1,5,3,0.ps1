@@ -27,6 +27,18 @@ Function Write-Log {
     Add-Content -Path $outputFilePath -Value $logMessage
 }
 
+# Function: Test-KeyPress - Simulates a key press to keep system awake
+Function Test-KeyPress {
+    param([System.Object]$wshell)
+    try {
+        # Send F15 key which is usually not mapped to any function
+        $wshell.SendKeys('{F15}')
+        Write-Log "Key press simulation successful"
+    } catch {
+        Write-Log "Error during key press simulation: $($_.Exception.Message)"
+    }
+}
+
 # Function: Normalize content for comparison
 Function Get-NormalizedContent {
     param([string]$Content)
@@ -81,10 +93,10 @@ Function Get-LatestVersionedFile {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $repoContent = Invoke-WebRequest -Uri $RepoApiUrl -UseBasicParsing -ErrorAction Stop | ConvertFrom-Json
 
-        $matchingFiles = $repoContent | Where-Object { $_.name -match "$FilePrefix_v(\d+),(\d+),(\d+),(\d+)\.ps1" }
+        $matchingFiles = $repoContent | Where-Object { $_.name -match "$FilePrefix`_v(\d+),(\d+),(\d+),(\d+)\.ps1" }
         $latestFile = $matchingFiles |
             Sort-Object -Property {
-                if ($_.name -match "$FilePrefix_v(\d+),(\d+),(\d+),(\d+)\.ps1") {
+                if ($_.name -match "$FilePrefix`_v(\d+),(\d+),(\d+),(\d+)\.ps1") {
                     [int[]]@($matches[1], $matches[2], $matches[3], $matches[4])
                 } else {
                     [int[]]@(0, 0, 0, 0)
@@ -145,7 +157,7 @@ Function Update-Script {
         if ((Test-Path -Path $tempScriptPath) -and (Get-Content -Path $tempScriptPath)) {
             Move-Item -Path $tempScriptPath -Destination $scriptPath -Force
             Write-Log "Update successful - restarting script."
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$scriptPath`"" -WindowStyle Hidden
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File ""$scriptPath""" -WindowStyle Hidden
             Start-Sleep -Seconds 2
             Exit
         }
@@ -158,39 +170,33 @@ Function Update-Script {
     }
 }
 
-# Function: Send and verify key press
-Function Test-KeyPress {
-    param ($wshell)
-    try {
-        $wshell.SendKeys("{F15}")
-        Write-Log "Key press sent"
-        return $true
-    } catch {
-        Write-Log "Key press failed"
-        return $false
-    }
-}
-
 # Main function
 Function Main {
     try {
         if (!(Test-Path -Path $folderPath)) {
             New-Item -ItemType Directory -Path $folderPath | Out-Null
         }
+        
+        # Create a COM object for sending key presses
         $wshell = New-Object -ComObject wscript.shell
         $counter = 0
+        
         Write-Log "Script started"
+        
         while ($True) {
             Write-Log "Running key press test (iteration $counter)"
             Test-KeyPress -wshell $wshell
+            
             if ($counter % 10 -eq 0) {
                 Write-Log "Checking for updates (counter: $counter)"
                 Check-ForUpdates
             }
+            
             if ($counter % 5 -eq 0) {
                 Write-Log "Running log cleanup (counter: $counter)"
                 Cleanup-Logs
             }
+            
             $counter++
             Start-Sleep -Seconds 870
         }
@@ -210,5 +216,5 @@ if (!(Test-Path -Path $outputFilePath)) {
 Write-Log "Waiting 1 minute before starting the main script..."
 Start-Sleep -Seconds 60
 
-# Start the script
+# Start the main function
 Main
