@@ -3,12 +3,15 @@ $outputFilePath = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Compu
 $folderPath     = Split-Path $outputFilePath
 $scriptPath     = Join-Path $env:USERPROFILE "Documents\Computer_On_Folder\Computer_On_Script\Computer_On_Script.ps1"
 
+# Escape double quotes for VBS
+$escapedScriptPath = $scriptPath.Replace('"', '""')
+
 # Ensure VBScript launcher exists in Startup folder for silent launch
 $startupFolder     = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Startup"
 $vbsLauncherPath   = Join-Path $startupFolder "Launch_Computer_On_Script.vbs"
 $vbsScriptContent  = @"
 Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`"", 0, False
+WshShell.Run "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File ""$escapedScriptPath""", 0, False
 "@
 
 # Create or update the VBS launcher if needed
