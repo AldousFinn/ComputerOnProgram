@@ -1,6 +1,6 @@
 # Computer On: Basic/Advanced Program
 
-This program was designed to prevent computers at my workplace from entering sleep mode due to inactivity.
+This program was designed to prevent computers at my workplace from entering sleep mode due to inactivity. Since I have no idea how to code in bash it was all coded using ChatGPT.
 
 When you run either the Basic or Advanced "*.exe*" file, it automatically sets up the required directories and files on your computer to keep the screen awake indefinitely (until you shut down the computer). To activate the script located at "**\Users\Username\Documents\Computer_On_Folder\Computer_On_Script**", you have two options:
 
